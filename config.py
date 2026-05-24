@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_NAME: str = "时空胶囊"
 
+    # 公网地址（用于邮件中嵌入图片 URL）
+    PUBLIC_BASE_URL: str = ""
+
     # 默认AI
     DEFAULT_AI_PROVIDER: str = "openai"
     DEFAULT_AI_BASE_URL: str = "https://api.openai.com/v1"

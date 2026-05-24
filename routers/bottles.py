@@ -8,12 +8,11 @@ from database import get_db
 from models import DriftBottle, BottleComment, User
 from schemas import BottleCreate, BottleOut, CommentCreate, CommentOut
 from auth import get_current_user, get_optional_user
-import random
 
 router = APIRouter(prefix="/api/bottles", tags=["漂流瓶"])
 
 # 简单关键词过滤
-BAD_WORDS = ["广告", "加微信", "赚钱", "色情", "暴力"]
+BAD_WORDS = {"广告", "加微信", "赚钱", "色情", "暴力"}
 
 
 def simple_review(text: str) -> bool:
@@ -63,24 +62,28 @@ async def get_random_bottle(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user)
 ):
-    """随机捞取一个漂流瓶"""
-    query = select(DriftBottle).where(
-        DriftBottle.is_public == True,
-        DriftBottle.is_reviewed == True,
-        DriftBottle.is_hidden == False,
-    ).options(selectinload(DriftBottle.comments))
+    """随机捞取一个漂流瓶（DB 层 ORDER BY RANDOM() LIMIT 1，避免全表加载）"""
+    query = (
+        select(DriftBottle)
+        .where(
+            DriftBottle.is_public == True,
+            DriftBottle.is_reviewed == True,
+            DriftBottle.is_hidden == False,
+        )
+        .options(selectinload(DriftBottle.comments))
+        .order_by(func.random())
+        .limit(1)
+    )
 
     # 排除自己的瓶子
     if current_user:
         query = query.where(DriftBottle.user_id != current_user.id)
 
     result = await db.execute(query)
-    bottles = result.scalars().all()
+    bottle = result.scalar_one_or_none()
 
-    if not bottles:
+    if not bottle:
         raise HTTPException(status_code=404, detail="海洋里暂时没有漂流瓶，来投一个吧～")
-
-    bottle = random.choice(bottles)
 
     # 增加浏览次数
     await db.execute(

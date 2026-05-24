@@ -40,6 +40,8 @@ class LetterCreate(BaseModel):
     recipient_email: EmailStr
     send_at: datetime
     mood: Optional[str] = "neutral"
+    weather: Optional[str] = ""
+    images: Optional[List[str]] = []
 
 
 class LetterOut(BaseModel):
@@ -52,6 +54,8 @@ class LetterOut(BaseModel):
     sent_at: Optional[datetime]
     created_at: datetime
     mood: str
+    weather: Optional[str] = ""
+    images: List[str] = []
 
     class Config:
         from_attributes = True
@@ -141,15 +145,13 @@ class AIConfigUpdate(BaseModel):
 
 
 class AIConfigOut(BaseModel):
+    model_config = {"protected_namespaces": (), "from_attributes": True}
     provider: str
     base_url: str
     api_key_masked: str  # 脱敏展示
     model_name: str
     chat_model: str
     fortune_model: str
-
-    class Config:
-        from_attributes = True
 
 
 # ===== 算命 =====
