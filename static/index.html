@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时空胶囊 · 穿越时光的记录</title>
+<style>
+/* ===== 全局变量 ===== */
+:root {
+  --primary: #7c3aed;
+  --primary-light: #a78bfa;
+  --primary-dark: #5b21b6;
+  --accent: #f59e0b;
+  --bg: #0f0a1e;
+  --bg2: #1a1035;
+  --bg3: #241a47;
+  --card: rgba(124,58,237,0.08);
+  --card-border: rgba(167,139,250,0.2);
+  --text: #e2d9f3;
+  --text-muted: #9d8ec4;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(124,58,237,0.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== 星星背景 ===== */
+#stars-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== 布局 ===== */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ===== 侧边栏 ===== */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: rgba(26,16,53,0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--card-border);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.sidebar-logo {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--card-border);
+}
+.logo-icon { font-size: 36px; display: block; text-align: center; margin-bottom: 8px; }
+.logo-title {
+  text-align: center; font-size: 20px; font-weight: bold;
+  background: linear-gradient(135deg, #a78bfa, #f59e0b);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.logo-sub { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+.nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 12px;
+  cursor: pointer; color: var(--text-muted);
+  font-size: 14px; transition: all 0.2s;
+  margin-bottom: 4px;
+}
+.nav-item:hover { background: var(--card); color: var(--text); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(167,139,250,0.1));
+  color: var(--primary-light);
+  border: 1px solid var(--card-border);
+}
+.nav-icon { font-size: 20px; width: 24px; text-align: center; }
+
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid var(--card-border);
+}
+.user-info {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px;
+  background: var(--card); cursor: pointer;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.user-name { font-size: 13px; flex: 1; }
+.user-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ===== 主内容区 ===== */
+.main { margin-left: 240px; flex: 1; padding: 24px; min-height: 100vh; }
+
+/* ===== 页面标题 ===== */
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 28px; font-weight: bold; }
+.page-title .emoji { margin-right: 10px; }
+.page-desc { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+.card + .card { margin-top: 16px; }
+
+/* ===== 表单 ===== */
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: block; }
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--primary-light);
+  background: rgba(124,58,237,0.08);
+}
+.form-textarea { resize: vertical; min-height: 120px; }
+.form-select option { background: var(--bg2); }
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 11px 24px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: none; transition: all 0.2s; font-family: inherit;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white; box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,0.5); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+}
+.btn-outline:hover { border-color: var(--primary-light); color: var(--primary-light); }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { color: var(--text); }
+.btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+.btn-full { width: 100%; }
+
+/* ===== 标签/徽章 ===== */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-primary { background: rgba(124,58,237,0.2); color: var(--primary-light); border: 1px solid rgba(124,58,237,0.3); }
+.badge-success { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-muted { background: rgba(157,142,196,0.1); color: var(--text-muted); border: 1px solid var(--card-border); }
+
+/* ===== 网格 ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* ===== 统计卡 ===== */
+.stat-card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 20px;
+  text-align: center;
+}
+.stat-number { font-size: 32px; font-weight: bold; color: var(--primary-light); }
+.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* ===== 时光信列表 ===== */
+.letter-item {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 20px;
+  margin-bottom: 12px; transition: all 0.2s;
+}
+.letter-item:hover { border-color: var(--primary-light); transform: translateY(-1px); }
+.letter-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.letter-title { font-size: 16px; font-weight: 600; }
+.letter-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 12px; }
+.letter-countdown { font-size: 13px; color: var(--accent); font-weight: 600; }
+
+/* ===== 漂流瓶 ===== */
+.bottle-card {
+  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(245,158,11,0.06));
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 24px;
+  position: relative; overflow: hidden;
+}
+.bottle-card::before {
+  content: '🫙'; position: absolute; right: -10px; top: -10px;
+  font-size: 80px; opacity: 0.06; transform: rotate(15deg);
+}
+.bottle-mood { font-size: 24px; margin-bottom: 12px; }
+.bottle-content { font-size: 15px; line-height: 1.7; color: var(--text); }
+.bottle-footer { margin-top: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ===== AI聊天 ===== */
+.chat-container {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 200px); min-height: 400px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+.msg-row { display: flex; gap: 10px; }
+.msg-row.user { flex-direction: row-reverse; }
+.msg-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  background: linear-gradient(135deg, var(--primary), #a78bfa);
+}
+.msg-row.user .msg-avatar { background: linear-gradient(135deg, var(--accent), #fb923c); }
+.msg-bubble {
+  max-width: 70%; padding: 12px 16px; border-radius: 16px;
+  font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+}
+.msg-row.assistant .msg-bubble {
+  background: rgba(124,58,237,0.12);
+  border: 1px solid var(--card-border);
+  border-top-left-radius: 4px;
+}
+.msg-row.user .msg-bubble {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-top-right-radius: 4px;
+}
+.msg-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: right; }
+.msg-row.assistant .msg-time { text-align: left; }
+
+.chat-input-area {
+  padding: 16px; border-top: 1px solid var(--card-border);
+  display: flex; gap: 10px; align-items: flex-end;
+}
+.chat-input {
+  flex: 1; min-height: 44px; max-height: 120px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 12px; padding: 11px 16px;
+  color: var(--text); font-size: 14px; font-family: inherit;
+  resize: none; outline: none; transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--primary-light); }
+
+/* ===== 算命 ===== */
+.fortune-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.fortune-tab {
+  flex: 1; padding: 12px; border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; font-size: 14px; font-family: inherit;
+  transition: all 0.2s; text-align: center;
+}
+.fortune-tab.active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(167,139,250,0.1));
+  color: var(--primary-light);
+  border-color: var(--primary-light);
+}
+.fortune-result {
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.08));
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius); padding: 24px;
+  font-size: 15px; line-height: 1.9; white-space: pre-wrap;
+  min-height: 100px;
+}
+
+/* ===== 设置 ===== */
+.provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.provider-card {
+  padding: 14px 10px; border-radius: 12px;
+  border: 1px solid var(--card-border);
+  cursor: pointer; text-align: center; transition: all 0.2s;
+  background: transparent;
+}
+.provider-card:hover { border-color: var(--primary-light); }
+.provider-card.selected {
+  background: rgba(124,58,237,0.15);
+  border-color: var(--primary-light);
+}
+.provider-logo { font-size: 24px; margin-bottom: 6px; }
+.provider-name { font-size: 12px; color: var(--text-muted); }
+.provider-card.selected .provider-name { color: var(--primary-light); }
+
+/* ===== 模态框 ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--bg2); border: 1px solid var(--card-border);
+  border-radius: 20px; padding: 32px; width: 100%; max-width: 480px;
+  box-shadow: var(--shadow); position: relative;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-title { font-size: 20px; font-weight: bold; margin-bottom: 24px; }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 20px; padding: 4px;
+}
+
+/* ===== Toast 提示 ===== */
+.toast-container {
+  position: fixed; top: 20px; right: 20px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 20px; border-radius: 10px; font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  display: flex; align-items: center; gap: 8px;
+  animation: toastIn 0.3s ease;
+  max-width: 320px;
+}
+.toast-success { background: rgba(16,185,129,0.9); color: white; }
+.toast-error { background: rgba(239,68,68,0.9); color: white; }
+.toast-info { background: rgba(124,58,237,0.9); color: white; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ===== 加载 ===== */
+.loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px; padding: 20px; justify-content: center; }
+.spinner {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--card-border); border-top-color: var(--primary-light);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 分隔线 ===== */
+.divider { border: none; border-top: 1px solid var(--card-border); margin: 20px 0; }
+
+/* ===== 空状态 ===== */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+.empty-title { font-size: 18px; margin-bottom: 8px; }
+.empty-desc { font-size: 14px; }
+
+/* ===== 移动端 ===== */
+.hamburger {
+  display: none; position: fixed; top: 16px; left: 16px; z-index: 200;
+  width: 40px; height: 40px; background: var(--bg2);
+  border: 1px solid var(--card-border); border-radius: 10px;
+  cursor: pointer; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+@media (max-width: 768px) {
+  .hamburger { display: flex; }
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 16px; padding-top: 64px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .chat-container { height: calc(100vh - 160px); }
+  .fortune-tabs { flex-wrap: wrap; }
+}
+
+/* ===== 评论区 ===== */
+.comment-item {
+  padding: 12px 0; border-bottom: 1px solid var(--card-border);
+}
+.comment-item:last-child { border-bottom: none; }
+.comment-nick { font-size: 12px; color: var(--primary-light); font-weight: 600; }
+.comment-text { font-size: 14px; margin-top: 4px; line-height: 1.6; }
+.comment-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ===== 自定义滚动条 ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+/* ===== 渐变文字 ===== */
+.text-gradient {
+  background: linear-gradient(135deg, #a78bfa, #f59e0b);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ===== 心情选择器 ===== */
+.mood-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.mood-btn {
+  padding: 8px 14px; border-radius: 20px;
+  border: 1px solid var(--card-border); background: transparent;
+  cursor: pointer; font-size: 18px; transition: all 0.2s;
+}
+.mood-btn:hover, .mood-btn.selected {
+  background: rgba(124,58,237,0.2);
+  border-color: var(--primary-light);
+  transform: scale(1.1);
+}
+
+/* ===== 胶囊浮动动画 ===== */
+@keyframes capsuleFloat {
+  0%,100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+@keyframes capsuleGlow {
+  0%,100% { box-shadow: 0 0 20px rgba(124,58,237,0.3), 0 0 40px rgba(167,139,250,0.1); }
+  50% { box-shadow: 0 0 40px rgba(124,58,237,0.6), 0 0 80px rgba(167,139,250,0.3); }
+}
+@keyframes capsuleSpin {
+  0% { transform: rotateY(0deg) rotateX(5deg); }
+  100% { transform: rotateY(360deg) rotateX(5deg); }
+}
+.home-capsule-wrap {
+  display: flex; justify-content: center; align-items: center;
+  margin: 20px 0 32px; position: relative;
+}
+.home-capsule {
+  font-size: 96px; display: block;
+  animation: capsuleFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(167,139,250,0.6));
+  cursor: pointer; user-select: none;
+  transition: filter 0.3s;
+}
+.home-capsule:hover {
+  animation: capsuleFloat 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 36px rgba(167,139,250,1));
+}
+.capsule-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(167,139,250,0.2);
+  animation: ringExpand 2.5s ease-out infinite;
+}
+.capsule-ring:nth-child(2) { animation-delay: 0.8s; }
+.capsule-ring:nth-child(3) { animation-delay: 1.6s; }
+@keyframes ringExpand {
+  0% { width: 80px; height: 80px; opacity: 0.6; }
+  100% { width: 220px; height: 220px; opacity: 0; }
+}
+
+/* ===== 拉链封存动画 ===== */
+.zipper-btn-wrap { position: relative; overflow: hidden; }
+.zipper-progress {
+  position: absolute; top: 0; left: -100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  width: 60%; transition: none; pointer-events: none;
+}
+@keyframes zipperSlide {
+  0% { left: -100%; }
+  100% { left: 150%; }
+}
+.btn-zipper-active .zipper-progress { animation: zipperSlide 0.6s linear; }
+
+/* 拉链全屏遮罩 */
+.zipper-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  pointer-events: none;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.zipper-top, .zipper-bottom {
+  background: linear-gradient(135deg, #1a1035, #241a47);
+  flex: 1;
+  display: flex; align-items: flex-end; /* top靠底 */
+  transition: transform 0.7s cubic-bezier(0.77,0,0.18,1);
+}
+.zipper-bottom { align-items: flex-start; }
+.zipper-top-inner, .zipper-bottom-inner {
+  width: 100%; height: 4px;
+  background: repeating-linear-gradient(90deg, #a78bfa 0px, #a78bfa 12px, transparent 12px, transparent 24px);
+  position: relative;
+}
+.zipper-pull {
+  position: fixed; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px; z-index: 9999;
+  animation: zipPull 0.5s ease-in-out;
+  pointer-events: none;
+}
+@keyframes zipPull {
+  0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; }
+  50% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+}
+.zipper-overlay.zip-open .zipper-top { transform: translateY(-100%); }
+.zipper-overlay.zip-open .zipper-bottom { transform: translateY(100%); }
+
+/* ===== 漂流瓶投放动画 ===== */
+.bottle-throw-anim {
+  position: fixed; font-size: 48px; z-index: 9997;
+  pointer-events: none;
+  animation: bottleThrow 1.8s ease-in forwards;
+}
+@keyframes bottleThrow {
+  0% { opacity: 1; transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.3) rotate(-20deg); }
+  60% { transform: scale(0.9) rotate(30deg) translateX(60px) translateY(-40px); }
+  100% { opacity: 0; transform: scale(0.3) rotate(80deg) translateX(200px) translateY(120px); }
+}
+
+/* ===== 捞漂流瓶动画 ===== */
+.fishing-overlay {
+  position: fixed; inset: 0; z-index: 9996;
+  background: rgba(10,5,30,0.92);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  opacity: 0; animation: fishingFadeIn 0.3s forwards;
+}
+@keyframes fishingFadeIn { to { opacity: 1; } }
+.fishing-sea {
+  width: 320px; height: 160px; position: relative; overflow: hidden;
+  border-radius: 12px; background: linear-gradient(180deg, #0a1628 0%, #0d2040 60%, #0a3060 100%);
+  margin-bottom: 24px;
+}
+.fishing-wave {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
+  background: linear-gradient(180deg, transparent, rgba(100,160,255,0.2));
+  animation: waveAnim 1.5s ease-in-out infinite;
+}
+.fishing-wave::before {
+  content:''; position: absolute; top:-10px; left:0; right:0; height:20px;
+  background: repeating-linear-gradient(90deg, transparent 0, transparent 20px, rgba(100,200,255,0.15) 20px, rgba(100,200,255,0.15) 40px);
+  animation: waveMoveX 2s linear infinite;
+}
+@keyframes waveAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes waveMoveX { 0%{background-position:0 0} 100%{background-position:40px 0} }
+
+.fishing-rod {
+  position: absolute; top: 0; right: 60px;
+  width: 3px; background: linear-gradient(180deg, #a78bfa, #7c3aed);
+  transform-origin: top center;
+  animation: rodSwing 1.2s ease-in-out infinite;
+}
+@keyframes rodSwing {
+  0%,100% { transform: rotate(-5deg); height: 80px; }
+  50% { transform: rotate(8deg); height: 100px; }
+}
+.fishing-hook {
+  position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  font-size: 16px; animation: hookBob 1.2s ease-in-out infinite;
+}
+@keyframes hookBob {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+.fishing-bottle-found {
+  font-size: 48px;
+  animation: bottleFound 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes bottleFound {
+  0% { transform: translateY(60px) scale(0); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.fishing-text {
+  font-size: 16px; color: var(--primary-light); margin-top: 12px;
+  animation: textPulse 1s ease-in-out infinite;
+}
+@keyframes textPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+/* ===== 漂流瓶投入大海按钮波纹 ===== */
+.wave-btn { position: relative; overflow: hidden; }
+.wave-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0); opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+.wave-btn.ripple::after { transform: scale(2); opacity: 0; transition: none; animation: btnRipple 0.5s ease-out; }
+@keyframes btnRipple {
+  0% { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ===== 成功粒子 ===== */
+.particle {
+  position: fixed; pointer-events: none; z-index: 9999;
+  border-radius: 50%; animation: particleBurst 0.8s ease-out forwards;
+}
+@keyframes particleBurst {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+/* ===== 信封封存动画 ===== */
+@keyframes envelopeSeal {
+  0% { transform: scaleY(0) translateY(-50%); opacity: 0; }
+  50% { transform: scaleY(1.1) translateY(0); opacity: 1; }
+  100% { transform: scaleY(1) translateY(0); opacity: 1; }
+}
+.seal-flap {
+  display: block; width: 0; height: 0; margin: 0 auto;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+  border-top: 24px solid rgba(124,58,237,0.6);
+  animation: envelopeSeal 0.4s ease-out;
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<!-- 汉堡菜单（移动端） -->
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- Toast容器 -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- 模态框区 -->
+<div id="modal-area"></div>
+
+<div class="app">
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⏳</span>
+      <div class="logo-title">时空胶囊</div>
+      <div class="logo-sub">穿越时光的记录</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('home')" data-page="home">
+        <span class="nav-icon">🏠</span> 首页
+      </div>
+      <div class="nav-item" onclick="showPage('letter')" data-page="letter">
+        <span class="nav-icon">✉️</span> 时光信
+      </div>
+      <div class="nav-item" onclick="showPage('bottle')" data-page="bottle">
+        <span class="nav-icon">🫙</span> 漂流瓶
+      </div>
+      <div class="nav-item" onclick="showPage('soul')" data-page="soul">
+        <span class="nav-icon">🌊</span> 情绪树洞
+      </div>
+      <div class="nav-item" onclick="showPage('fortune')" data-page="fortune">
+        <span class="nav-icon">🔮</span> AI算命
+      </div>
+      <div class="nav-item" onclick="showPage('settings')" data-page="settings">
+        <span class="nav-icon">⚙️</span> AI配置
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" id="user-info-display" onclick="handleUserClick()">
+        <div class="user-avatar" id="user-avatar-icon">👤</div>
+        <div>
+          <div class="user-name" id="user-display-name">未登录</div>
+          <div class="user-sub" id="user-display-sub">点击登录</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main class="main" id="main-content">
+    <!-- 首页 -->
+    <div id="page-home" class="page">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">⏳</span>时空胶囊</div>
+        <div class="page-desc">记录此刻，给未来的自己留下痕迹</div>
+      </div>
+
+      <!-- 悬浮胶囊动画区 -->
+      <div class="home-capsule-wrap" id="home-capsule-area">
+        <div class="capsule-ring"></div>
+        <div class="capsule-ring"></div>
+        <div class="capsule-ring"></div>
+        <span class="home-capsule" onclick="capsuleClick()" title="点我！">⏳</span>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:24px">
+        <div class="stat-card" onclick="showPage('letter')" style="cursor:pointer">
+          <div style="font-size:32px;margin-bottom:8px">✉️</div>
+          <div class="stat-number" id="stat-letters">-</div>
+          <div class="stat-label">时光信</div>
+        </div>
+        <div class="stat-card" onclick="showPage('bottle')" style="cursor:pointer">
+          <div style="font-size:32px;margin-bottom:8px">🫙</div>
+          <div class="stat-number" id="stat-bottles">-</div>
+          <div class="stat-label">漂流瓶</div>
+        </div>
+        <div class="stat-card" onclick="showPage('soul')" style="cursor:pointer">
+          <div style="font-size:32px;margin-bottom:8px">🌊</div>
+          <div class="stat-number">∞</div>
+          <div class="stat-label">AI陪伴</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" onclick="showPage('letter')" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='#a78bfa'" onmouseleave="this.style.borderColor='rgba(167,139,250,0.2)'">
+          <div style="font-size:28px;margin-bottom:12px">✉️</div>
+          <div style="font-size:18px;font-weight:bold;margin-bottom:8px">时光信</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6">给未来的自己写一封信，在你设定的日期，它会穿越时光出现在你的邮箱里。</div>
+        </div>
+        <div class="card" onclick="showPage('bottle')" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='#a78bfa'" onmouseleave="this.style.borderColor='rgba(167,139,250,0.2)'">
+          <div style="font-size:28px;margin-bottom:12px">🫙</div>
+          <div style="font-size:18px;font-weight:bold;margin-bottom:8px">漂流瓶</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6">把不开心埋藏下去，随波漂流。也许某个陌生人会打捞起你的心事，给你一句温暖的话。</div>
+        </div>
+        <div class="card" onclick="showPage('soul')" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='#a78bfa'" onmouseleave="this.style.borderColor='rgba(167,139,250,0.2)'">
+          <div style="font-size:28px;margin-bottom:12px">🌊</div>
+          <div style="font-size:18px;font-weight:bold;margin-bottom:8px">情绪树洞</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6">AI化身温柔的心理陪伴师，随时倾听你的心事，陪你度过每一个难熬的时刻。</div>
+        </div>
+        <div class="card" onclick="showPage('fortune')" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='#a78bfa'" onmouseleave="this.style.borderColor='rgba(167,139,250,0.2)'">
+          <div style="font-size:28px;margin-bottom:12px">🔮</div>
+          <div style="font-size:18px;font-weight:bold;margin-bottom:8px">AI算命</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6">结合八字命理、星座运势，AI为你娱乐解读命运，探索你的独特人生轨迹。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 时光信 -->
+    <div id="page-letter" class="page" style="display:none">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">✉️</span>时光信</div>
+        <div class="page-desc">写给未来的自己，或者重要的人</div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div style="font-size:16px;font-weight:bold;margin-bottom:20px">📝 写一封信</div>
+            <div class="form-group">
+              <label class="form-label">信件标题</label>
+              <input id="letter-title" class="form-input" placeholder="给一年后的自己...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">写信内容</label>
+              <textarea id="letter-content" class="form-textarea" style="min-height:180px" placeholder="亲爱的未来的我，&#10;&#10;此刻我想告诉你..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">发送到邮箱</label>
+              <input id="letter-email" class="form-input" type="email" placeholder="future@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">发送时间</label>
+              <input id="letter-sendtime" class="form-input" type="datetime-local">
+            </div>
+            <div class="form-group">
+              <label class="form-label">此刻心情</label>
+              <div class="mood-picker" id="letter-mood-picker">
+                <button class="mood-btn selected" data-mood="happy" onclick="selectMood(this,'letter')">😊</button>
+                <button class="mood-btn" data-mood="hopeful" onclick="selectMood(this,'letter')">🌟</button>
+                <button class="mood-btn" data-mood="melancholy" onclick="selectMood(this,'letter')">🌧️</button>
+                <button class="mood-btn" data-mood="excited" onclick="selectMood(this,'letter')">🎉</button>
+                <button class="mood-btn" data-mood="peaceful" onclick="selectMood(this,'letter')">🕊️</button>
+                <button class="mood-btn" data-mood="neutral" onclick="selectMood(this,'letter')">😐</button>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full zipper-btn-wrap" id="letter-submit-btn" onclick="submitLetter()">
+              <div class="zipper-progress"></div>
+              🔒 封存时光信
+            </button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:bold;margin-bottom:16px;padding-left:4px">📬 我的时光信</div>
+          <div id="letter-list">
+            <div class="loading"><div class="spinner"></div>加载中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 漂流瓶 -->
+    <div id="page-bottle" class="page" style="display:none">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">🫙</span>漂流瓶</div>
+        <div class="page-desc">埋藏心事，随波漂流，也许会遇见懂你的人</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="showBottleTab('throw')">🫙 投放漂流瓶</button>
+        <button class="btn btn-outline" onclick="pickBottle()">🎣 随机捞取</button>
+        <button class="btn btn-outline" onclick="showBottleTab('mine')">📦 我的漂流瓶</button>
+      </div>
+
+      <!-- 投放表单 -->
+      <div id="bottle-throw" class="card">
+        <div style="font-size:16px;font-weight:bold;margin-bottom:20px">💭 投放一个漂流瓶</div>
+        <div class="form-group">
+          <label class="form-label">此刻的心情</label>
+          <div class="mood-picker" id="bottle-mood-picker">
+            <button class="mood-btn selected" data-mood="sad" onclick="selectMood(this,'bottle')">😢</button>
+            <button class="mood-btn" data-mood="anxious" onclick="selectMood(this,'bottle')">😰</button>
+            <button class="mood-btn" data-mood="lonely" onclick="selectMood(this,'bottle')">😔</button>
+            <button class="mood-btn" data-mood="confused" onclick="selectMood(this,'bottle')">😕</button>
+            <button class="mood-btn" data-mood="angry" onclick="selectMood(this,'bottle')">😤</button>
+            <button class="mood-btn" data-mood="happy" onclick="selectMood(this,'bottle')">😊</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">想说的话（5-1000字）</label>
+          <textarea id="bottle-content" class="form-textarea" style="min-height:140px" placeholder="把那些难以开口的话，放进漂流瓶..."></textarea>
+          <div style="text-align:right;font-size:12px;color:var(--text-muted);margin-top:4px" id="bottle-count">0 / 1000</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">标签（逗号分隔，可选）</label>
+          <input id="bottle-tags" class="form-input" placeholder="工作,感情,生活...">
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
+            <input type="checkbox" id="bottle-public" checked style="width:16px;height:16px;accent-color:var(--primary)">
+            允许他人看见并评论（关闭则私密存档）
+          </label>
+        </div>
+        <button class="btn btn-primary wave-btn" id="bottle-throw-btn" onclick="throwBottle()">🌊 投入大海</button>
+      </div>
+
+      <!-- 随机捞取结果 -->
+      <div id="bottle-random" style="display:none">
+        <div id="bottle-random-content"></div>
+        <div style="margin-top:16px">
+          <button class="btn btn-outline" onclick="pickBottle()">🎣 再捞一个</button>
+          <button class="btn btn-ghost btn-sm" onclick="showBottleTab('throw')" style="margin-left:8px">← 返回</button>
+        </div>
+      </div>
+
+      <!-- 我的漂流瓶 -->
+      <div id="bottle-mine" style="display:none">
+        <div id="bottle-mine-list"></div>
+      </div>
+    </div>
+
+    <!-- 情绪树洞 -->
+    <div id="page-soul" class="page" style="display:none">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">🌊</span>情绪树洞</div>
+        <div class="page-desc">AI陪伴师「星愿」，随时倾听你的心声</div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="soul-messages">
+          <div class="msg-row assistant">
+            <div class="msg-avatar">🌟</div>
+            <div>
+              <div class="msg-bubble">嗨～我是「星愿」✨ 你的AI情绪陪伴师。无论你今天有什么烦恼、开心的事、或者只是想找人说说话，我都在这里陪着你。
+
+今天感觉怎么样？</div>
+              <div class="msg-time">刚刚</div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="soul-input" placeholder="说说今天发生了什么..." onkeydown="handleChatKey(event,'soul')" rows="1" oninput="autoResize(this)"></textarea>
+          <button class="btn btn-primary" onclick="sendSoulMessage()" id="soul-send-btn">发送</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="quickSay('soul','最近压力很大，不知道怎么办...')">压力山大</button>
+        <button class="btn btn-outline btn-sm" onclick="quickSay('soul','感觉很孤独，没人理解我')">感到孤独</button>
+        <button class="btn btn-outline btn-sm" onclick="quickSay('soul','今天发生了一件很难过的事')">倾诉心事</button>
+        <button class="btn btn-outline btn-sm" onclick="quickSay('soul','我需要一些鼓励和正能量')">需要鼓励</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearChat('soul')" style="margin-left:auto">🗑️ 清空对话</button>
+      </div>
+    </div>
+
+    <!-- AI算命 -->
+    <div id="page-fortune" class="page" style="display:none">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">🔮</span>AI算命算卦</div>
+        <div class="page-desc">娱乐性质，结合八字命理与星座知识，仅供参考</div>
+      </div>
+      <div class="fortune-tabs">
+        <button class="fortune-tab active" onclick="switchFortune('bazi', this)">🀄 八字命理</button>
+        <button class="fortune-tab" onclick="switchFortune('star', this)">⭐ 星座运势</button>
+        <button class="fortune-tab" onclick="switchFortune('chat', this)">💬 命理聊天</button>
+      </div>
+
+      <!-- 八字 -->
+      <div id="fortune-bazi">
+        <div class="card">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">出生日期</label>
+              <input id="f-birth-date" class="form-input" type="date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">出生时辰（可选）</label>
+              <input id="f-birth-time" class="form-input" type="time">
+            </div>
+            <div class="form-group">
+              <label class="form-label">性别</label>
+              <select id="f-gender" class="form-select">
+                <option value="">不透露</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">想问什么（可选）</label>
+              <input id="f-bazi-question" class="form-input" placeholder="事业/感情/健康...">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="doFortune('bazi')">🀄 开始批命</button>
+        </div>
+      </div>
+
+      <!-- 星座 -->
+      <div id="fortune-star" style="display:none">
+        <div class="card">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">你的星座</label>
+              <select id="f-star-sign" class="form-select">
+                <option value="">请选择</option>
+                <option>白羊座</option><option>金牛座</option><option>双子座</option>
+                <option>巨蟹座</option><option>狮子座</option><option>处女座</option>
+                <option>天秤座</option><option>天蝎座</option><option>射手座</option>
+                <option>摩羯座</option><option>水瓶座</option><option>双鱼座</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">出生日期（可选）</label>
+              <input id="f-star-birth" class="form-input" type="date">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">想了解什么方面</label>
+              <input id="f-star-question" class="form-input" placeholder="近期运势/爱情/事业/财运...">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="doFortune('star')">⭐ 解读星象</button>
+        </div>
+      </div>
+
+      <!-- 命理聊天 -->
+      <div id="fortune-chat" style="display:none">
+        <div class="chat-container" style="height:400px">
+          <div class="chat-messages" id="fortune-messages">
+            <div class="msg-row assistant">
+              <div class="msg-avatar">🔮</div>
+              <div>
+                <div class="msg-bubble">吾乃「玄机先生」，精通八字命理、星象占卜之术。可否将生辰八字相告，或有何疑惑，尽管道来。🌟</div>
+                <div class="msg-time">刚刚</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <textarea class="chat-input" id="fortune-input" placeholder="询问命理..." onkeydown="handleChatKey(event,'fortune')" rows="1" oninput="autoResize(this)"></textarea>
+            <button class="btn btn-primary" onclick="sendFortuneMessage()" id="fortune-send-btn">问卦</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 结果展示 -->
+      <div id="fortune-result-area" style="display:none;margin-top:20px">
+        <div style="font-size:14px;font-weight:bold;color:var(--accent);margin-bottom:12px">🔮 命理解析</div>
+        <div class="fortune-result" id="fortune-result-text"></div>
+        <div style="margin-top:12px">
+          <button class="btn btn-outline btn-sm" onclick="copyFortune()">📋 复制结果</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置 -->
+    <div id="page-settings" class="page" style="display:none">
+      <div class="page-header">
+        <div class="page-title"><span class="emoji">⚙️</span>AI模型配置</div>
+        <div class="page-desc">自定义你的AI模型，支持OpenAI兼容接口</div>
+      </div>
+      <div class="card">
+        <div style="font-size:15px;font-weight:bold;margin-bottom:16px">选择服务商</div>
+        <div class="provider-grid" id="provider-grid">
+          <div class="provider-card selected" onclick="selectProvider('openai',this)">
+            <div class="provider-logo">🤖</div>
+            <div class="provider-name">OpenAI</div>
+          </div>
+          <div class="provider-card" onclick="selectProvider('qwen',this)">
+            <div class="provider-logo">☁️</div>
+            <div class="provider-name">通义千问</div>
+          </div>
+          <div class="provider-card" onclick="selectProvider('zhipu',this)">
+            <div class="provider-logo">🧠</div>
+            <div class="provider-name">智谱GLM</div>
+          </div>
+          <div class="provider-card" onclick="selectProvider('deepseek',this)">
+            <div class="provider-logo">🌊</div>
+            <div class="provider-name">DeepSeek</div>
+          </div>
+          <div class="provider-card" onclick="selectProvider('custom',this)">
+            <div class="provider-logo">🔧</div>
+            <div class="provider-name">自定义</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">API Base URL</label>
+            <input id="cfg-base-url" class="form-input" placeholder="https://api.openai.com/v1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input id="cfg-api-key" class="form-input" type="password" placeholder="sk-...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">默认模型名称</label>
+            <input id="cfg-model" class="form-input" placeholder="gpt-4o-mini">
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div style="font-size:14px;font-weight:bold;margin-bottom:14px;color:var(--text-muted)">功能专用模型（可选，不填则用默认模型）</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">🌊 情绪树洞专用模型</label>
+            <input id="cfg-chat-model" class="form-input" placeholder="留空使用默认模型">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔮 算命算卦专用模型</label>
+            <input id="cfg-fortune-model" class="form-input" placeholder="留空使用默认模型">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveAIConfig()">💾 保存配置</button>
+          <button class="btn btn-outline" onclick="testAIConfig()">🧪 测试连接</button>
+          <button class="btn btn-danger btn-sm" onclick="resetAIConfig()" style="margin-left:auto">重置为默认</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">常用API地址速查</div>
+        <div style="display:grid;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px">
+            <span>🤖 OpenAI</span>
+            <code style="color:var(--primary-light);font-size:12px">https://api.openai.com/v1</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px">
+            <span>☁️ 通义千问</span>
+            <code style="color:var(--primary-light);font-size:12px">https://dashscope.aliyuncs.com/compatible-mode/v1</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px">
+            <span>🧠 智谱GLM</span>
+            <code style="color:var(--primary-light);font-size:12px">https://open.bigmodel.cn/api/paas/v4</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px">
+            <span>🌊 DeepSeek</span>
+            <code style="color:var(--primary-light);font-size:12px">https://api.deepseek.com/v1</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ===== 状态 =====
+let currentUser = null;
+let token = localStorage.getItem('sg_token');
+let soulHistory = [];
+let fortuneHistory = [];
+let currentLetterMood = 'happy';
+let currentBottleMood = 'sad';
+const API = '';
+
+// 服务商预设
+const PROVIDERS = {
+  openai: { url: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  qwen: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+  zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
+  deepseek: { url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  custom: { url: '', model: '' },
+};
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', async () => {
+  initStars();
+  if (token) await loadUser();
+  await loadStats();
+
+  // 设置时间选择默认值（一年后）
+  const d = new Date(); d.setFullYear(d.getFullYear() + 1);
+  document.getElementById('letter-sendtime').value = d.toISOString().slice(0,16);
+
+  // 漂流瓶字数统计
+  document.getElementById('bottle-content').addEventListener('input', function() {
+    document.getElementById('bottle-count').textContent = this.value.length + ' / 1000';
+  });
+});
+
+// ===== 星星背景 =====
+function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random(),
+        speed: Math.random() * 0.003 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const a = 0.3 + 0.5 * (Math.sin(t * s.speed + s.phase) + 1) / 2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(167,139,250,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize(); createStars();
+  window.addEventListener('resize', () => { resize(); createStars(); });
+  requestAnimationFrame(draw);
+}
+
+// ===== 工具函数 =====
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const d = document.createElement('div');
+  d.className = `toast toast-${type}`;
+  d.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span><span>${msg}</span>`;
+  c.appendChild(d);
+  setTimeout(() => d.remove(), 3500);
+}
+
+async function api(method, url, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(API + url, {
+    method, headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || '请求失败');
+  return data;
+}
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).style.display = 'block';
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+  // 页面特定初始化
+  if (page === 'letter') loadLetters();
+  if (page === 'settings') loadAIConfig();
+
+  // 移动端关闭侧边栏
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ===== 用户认证 =====
+async function loadUser() {
+  try {
+    const data = await api('GET', '/api/auth/me');
+    currentUser = data;
+    updateUserUI();
+  } catch (e) {
+    token = null;
+    localStorage.removeItem('sg_token');
+  }
+}
+
+function updateUserUI() {
+  if (currentUser) {
+    document.getElementById('user-display-name').textContent = currentUser.nickname || currentUser.username;
+    document.getElementById('user-display-sub').textContent = currentUser.email;
+    document.getElementById('user-avatar-icon').textContent = '👤';
+  } else {
+    document.getElementById('user-display-name').textContent = '未登录';
+    document.getElementById('user-display-sub').textContent = '点击登录';
+  }
+}
+
+function handleUserClick() {
+  if (currentUser) showLogoutModal();
+  else showLoginModal();
+}
+
+function showLoginModal() {
+  showModal(`
+    <div class="modal-title">🔐 登录 / 注册</div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn btn-primary btn-sm" onclick="switchAuthTab('login')" id="tab-login">登录</button>
+      <button class="btn btn-outline btn-sm" onclick="switchAuthTab('register')" id="tab-register">注册</button>
+    </div>
+    <div id="auth-form">
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input id="auth-username" class="form-input" placeholder="用户名" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input id="auth-password" class="form-input" type="password" placeholder="密码" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary btn-full" id="auth-submit-btn" onclick="doLogin()">登录</button>
+    </div>
+  `);
+  setTimeout(()=>document.getElementById('auth-username').focus(), 100);
+}
+
+let authMode = 'login';
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').className = mode==='login' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+  document.getElementById('tab-register').className = mode==='register' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+  const f = document.getElementById('auth-form');
+  f.innerHTML = mode === 'login' ? `
+    <div class="form-group"><label class="form-label">用户名</label><input id="auth-username" class="form-input" placeholder="用户名"></div>
+    <div class="form-group"><label class="form-label">密码</label><input id="auth-password" class="form-input" type="password" placeholder="密码"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">登录</button>
+  ` : `
+    <div class="form-group"><label class="form-label">用户名</label><input id="auth-username" class="form-input" placeholder="用户名"></div>
+    <div class="form-group"><label class="form-label">昵称</label><input id="auth-nickname" class="form-input" placeholder="昵称（可选）"></div>
+    <div class="form-group"><label class="form-label">邮箱</label><input id="auth-email" class="form-input" type="email" placeholder="邮箱"></div>
+    <div class="form-group"><label class="form-label">密码</label><input id="auth-password" class="form-input" type="password" placeholder="密码（至少6位）"></div>
+    <button class="btn btn-primary btn-full" onclick="doRegister()">注册</button>
+  `;
+}
+
+async function doLogin() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!username || !password) return toast('请填写用户名和密码', 'error');
+  try {
+    const data = await api('POST', '/api/auth/login', { username, password });
+    token = data.access_token;
+    localStorage.setItem('sg_token', token);
+    currentUser = data.user;
+    updateUserUI();
+    closeModal();
+    toast('登录成功！欢迎回来 ' + (currentUser.nickname || currentUser.username), 'success');
+    loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function doRegister() {
+  const username = document.getElementById('auth-username').value.trim();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const nickname = document.getElementById('auth-nickname')?.value.trim() || '';
+  if (!username || !email || !password) return toast('请填写完整信息', 'error');
+  if (password.length < 6) return toast('密码至少6位', 'error');
+  try {
+    const data = await api('POST', '/api/auth/register', { username, email, password, nickname });
+    token = data.access_token;
+    localStorage.setItem('sg_token', token);
+    currentUser = data.user;
+    updateUserUI();
+    closeModal();
+    toast('注册成功！欢迎加入时空胶囊 🎉', 'success');
+    loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function showLogoutModal() {
+  showModal(`
+    <div class="modal-title">👤 个人信息</div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:48px;margin-bottom:12px">👤</div>
+      <div style="font-size:20px;font-weight:bold">${currentUser.nickname || currentUser.username}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px">${currentUser.email}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">注册于 ${new Date(currentUser.created_at).toLocaleDateString('zh-CN')}</div>
+    </div>
+    <button class="btn btn-danger btn-full" onclick="doLogout()">🚪 退出登录</button>
+  `);
+}
+
+function doLogout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('sg_token');
+  updateUserUI(); closeModal();
+  toast('已退出登录', 'info');
+}
+
+// ===== 模态框 =====
+function showModal(html) {
+  document.getElementById('modal-area').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        ${html}
+      </div>
+    </div>
+  `;
+}
+function closeModal() { document.getElementById('modal-area').innerHTML = ''; }
+
+// ===== 统计数据 =====
+async function loadStats() {
+  if (!currentUser) {
+    document.getElementById('stat-letters').textContent = '-';
+    document.getElementById('stat-bottles').textContent = '-';
+    return;
+  }
+  try {
+    const [letters, bottles] = await Promise.all([
+      api('GET', '/api/letters'),
+      api('GET', '/api/bottles/mine'),
+    ]);
+    document.getElementById('stat-letters').textContent = letters.length;
+    document.getElementById('stat-bottles').textContent = bottles.length;
+  } catch (e) {}
+}
+
+// ===== 心情选择 =====
+function selectMood(btn, prefix) {
+  const container = document.getElementById(prefix + '-mood-picker');
+  container.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (prefix === 'letter') currentLetterMood = btn.dataset.mood;
+  else currentBottleMood = btn.dataset.mood;
+}
+
+// ===== 时光信 =====
+async function loadLetters() {
+  if (!currentUser) {
+    document.getElementById('letter-list').innerHTML = `<div class="empty-state"><span class="empty-icon">🔒</span><div class="empty-title">请先登录</div><div class="empty-desc">登录后查看你的时光信</div><br><button class="btn btn-primary" onclick="showLoginModal()">立即登录</button></div>`;
+    return;
+  }
+  document.getElementById('letter-list').innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+  try {
+    const letters = await api('GET', '/api/letters');
+    if (!letters.length) {
+      document.getElementById('letter-list').innerHTML = `<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-title">还没有时光信</div><div class="empty-desc">写一封给未来自己的信吧</div></div>`;
+      return;
+    }
+    document.getElementById('letter-list').innerHTML = letters.map(l => renderLetter(l)).join('');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function renderLetter(l) {
+  const now = new Date();
+  const sendAt = new Date(l.send_at);
+  const diff = sendAt - now;
+  let countdown = '';
+  if (l.is_sent) countdown = '<span class="badge badge-success">✅ 已发送</span>';
+  else if (diff <= 0) countdown = '<span class="badge badge-warning">⏳ 发送中</span>';
+  else {
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    countdown = `<span class="letter-countdown">⏰ 还有 ${days}天 ${hours}时</span>`;
+  }
+
+  const moodMap = { happy:'😊', hopeful:'🌟', melancholy:'🌧️', excited:'🎉', peaceful:'🕊️', neutral:'😐' };
+  return `
+    <div class="letter-item">
+      <div class="letter-header">
+        <div>
+          <div class="letter-title">${moodMap[l.mood]||'📝'} ${escHtml(l.title)}</div>
+          <div class="letter-meta">
+            <span>📧 ${escHtml(l.recipient_email)}</span>
+            <span>📅 ${new Date(l.send_at).toLocaleString('zh-CN')}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${countdown}
+          ${!l.is_sent ? `<button class="btn btn-danger btn-sm" onclick="deleteLetter(${l.id})">删除</button>` : ''}
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text-muted);line-height:1.6;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:8px;border-left:3px solid var(--primary)">${escHtml(l.content.slice(0,100))}${l.content.length>100?'...':''}</div>
+    </div>
+  `;
+}
+
+async function submitLetter() {
+  if (!currentUser) return showLoginModal();
+  const title = document.getElementById('letter-title').value.trim();
+  const content = document.getElementById('letter-content').value.trim();
+  const email = document.getElementById('letter-email').value.trim();
+  const sendAt = document.getElementById('letter-sendtime').value;
+  if (!title) return toast('请填写信件标题', 'error');
+  if (!content) return toast('请写点内容', 'error');
+  if (!email) return toast('请填写收件邮箱', 'error');
+  if (!sendAt) return toast('请选择发送时间', 'error');
+
+  // 检查邮件是否配置
+  try {
+    const emailStatus = await api('GET', '/api/letters/email-status');
+    if (!emailStatus.configured) {
+      // 邮件未配置，弹提示但仍允许保存
+      showModal(`
+        <div class="modal-title">⚠️ 邮件服务未配置</div>
+        <div style="font-size:14px;line-height:1.8;color:var(--text-muted);margin-bottom:20px">
+          服务器暂未配置 SMTP 邮件发送，时光信将保存在系统中，但到期时<strong style="color:var(--warning)">无法自动发送邮件</strong>。<br><br>
+          如需启用邮件功能，请联系管理员在 <code style="color:var(--primary-light)">.env</code> 文件中配置：<br>
+          <code style="color:var(--primary-light)">SMTP_USER=你的邮箱<br>SMTP_PASSWORD=邮箱授权码</code>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="closeModal();doSealLetter()">仍然封存（不发邮件）</button>
+          <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        </div>
+      `);
+      return;
+    }
+  } catch(e) {}
+  doSealLetter();
+}
+
+async function doSealLetter() {
+  const title = document.getElementById('letter-title').value.trim();
+  const content = document.getElementById('letter-content').value.trim();
+  const email = document.getElementById('letter-email').value.trim();
+  const sendAt = document.getElementById('letter-sendtime').value;
+
+  // 拉链动画
+  playZipperAnimation(async () => {
+    try {
+      await api('POST', '/api/letters', {
+        title, content, recipient_email: email,
+        send_at: sendAt,
+        mood: currentLetterMood
+      });
+      document.getElementById('letter-title').value = '';
+      document.getElementById('letter-content').value = '';
+      await loadLetters();
+      await loadStats();
+      spawnParticles(document.getElementById('letter-submit-btn'), '#a78bfa');
+      toast('时光信已封存！将在指定时间飞向未来 ✨', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+  });
+}
+
+async function deleteLetter(id) {
+  showModal(`
+    <div class="modal-title">🗑️ 确认删除</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.7">
+      确定要删除这封时光信吗？删除后无法恢复。
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-danger" onclick="doDeleteLetter(${id})" style="flex:1">确认删除</button>
+      <button class="btn btn-outline" onclick="closeModal()" style="flex:1">取消</button>
+    </div>
+  `);
+}
+
+async function doDeleteLetter(id) {
+  closeModal();
+  try {
+    await api('DELETE', `/api/letters/${id}`);
+    toast('时光信已删除', 'success');
+    loadLetters();
+    loadStats();
+  } catch (e) { toast('删除失败：' + e.message, 'error'); }
+}
+
+// ===== 漂流瓶 =====
+function showBottleTab(tab) {
+  document.getElementById('bottle-throw').style.display = tab==='throw' ? 'block' : 'none';
+  document.getElementById('bottle-random').style.display = tab==='random' ? 'block' : 'none';
+  document.getElementById('bottle-mine').style.display = tab==='mine' ? 'block' : 'none';
+  if (tab === 'mine') loadMyBottles();
+}
+
+async function throwBottle() {
+  if (!currentUser) return showLoginModal();
+  const content = document.getElementById('bottle-content').value.trim();
+  const tags = document.getElementById('bottle-tags').value.trim();
+  const isPublic = document.getElementById('bottle-public').checked;
+  if (content.length < 5) return toast('内容至少5个字', 'error');
+  if (content.length > 1000) return toast('内容不超过1000字', 'error');
+
+  // 投瓶动画
+  const btn = document.getElementById('bottle-throw-btn');
+  btn.classList.add('ripple');
+  setTimeout(() => btn.classList.remove('ripple'), 500);
+
+  // 飞出漂流瓶动画
+  const rect = btn.getBoundingClientRect();
+  const anim = document.createElement('div');
+  anim.className = 'bottle-throw-anim';
+  anim.textContent = '🫙';
+  anim.style.left = rect.left + rect.width/2 - 24 + 'px';
+  anim.style.top = rect.top - 10 + 'px';
+  document.body.appendChild(anim);
+  setTimeout(() => anim.remove(), 1900);
+
+  btn.disabled = true;
+  btn.textContent = '🌊 正在入海...';
+  try {
+    await api('POST', '/api/bottles', {
+      content, tags, is_public: isPublic, mood: currentBottleMood
+    });
+    spawnParticles(btn, '#38bdf8');
+    toast('漂流瓶已投入大海 🌊', 'success');
+    document.getElementById('bottle-content').value = '';
+    document.getElementById('bottle-count').textContent = '0 / 1000';
+    document.getElementById('bottle-tags').value = '';
+    await loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '🌊 投入大海';
+  }
+}
+
+async function pickBottle() {
+  // 全屏捞瓶动画
+  showFishingAnimation();
+  try {
+    const bottle = await api('GET', '/api/bottles/random');
+    await showFishingSuccess(bottle);
+    showBottleTab('random');
+    document.getElementById('bottle-random-content').innerHTML = renderBottle(bottle, true);
+  } catch (e) {
+    hideFishingAnimation();
+    showBottleTab('random');
+    document.getElementById('bottle-random-content').innerHTML = `<div class="empty-state"><span class="empty-icon">🌊</span><div class="empty-title">${e.message}</div></div>`;
+  }
+}
+
+function showFishingAnimation() {
+  const overlay = document.createElement('div');
+  overlay.id = 'fishing-overlay';
+  overlay.className = 'fishing-overlay';
+  overlay.innerHTML = `
+    <div class="fishing-sea">
+      <div class="fishing-wave"></div>
+      <div class="fishing-rod" id="fishing-rod">
+        <span class="fishing-hook">🪝</span>
+      </div>
+    </div>
+    <div class="fishing-text" id="fishing-text">🎣 在海洋深处寻觅漂流瓶...</div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function showFishingSuccess(bottle) {
+  const textEl = document.getElementById('fishing-text');
+  if (textEl) textEl.textContent = '🫙 发现了一个漂流瓶！';
+  await new Promise(r => setTimeout(r, 800));
+  const sea = document.querySelector('.fishing-sea');
+  if (sea) {
+    const moodMap = { sad:'😢', anxious:'😰', lonely:'😔', confused:'😕', angry:'😤', happy:'😊' };
+    const bottleEl = document.createElement('div');
+    bottleEl.className = 'fishing-bottle-found';
+    bottleEl.textContent = moodMap[bottle.mood] || '🫙';
+    bottleEl.style.position = 'absolute';
+    bottleEl.style.bottom = '20px';
+    bottleEl.style.left = '50%';
+    bottleEl.style.transform = 'translateX(-50%)';
+    sea.appendChild(bottleEl);
+  }
+  await new Promise(r => setTimeout(r, 900));
+  hideFishingAnimation();
+}
+
+function hideFishingAnimation() {
+  const overlay = document.getElementById('fishing-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s';
+    setTimeout(() => overlay.remove(), 300);
+  }
+}
+
+function renderBottle(b, showComment=false) {
+  const moodMap = { sad:'😢', anxious:'😰', lonely:'😔', confused:'😕', angry:'😤', happy:'😊' };
+  const tags = b.tags ? b.tags.split(',').filter(t=>t).map(t=>`<span class="badge badge-muted" style="margin-right:4px">${escHtml(t)}</span>`).join('') : '';
+  const commentsHtml = showComment ? `
+    <div style="margin-top:20px">
+      <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--text-muted)">💬 排忧解难</div>
+      <div id="comments-${b.id}" style="margin-bottom:12px">${(b.comments||[]).length ? b.comments.map(c=>`<div class="comment-item"><div class="comment-nick">${escHtml(c.nickname)}</div><div class="comment-text">${escHtml(c.content)}</div><div class="comment-time">${new Date(c.created_at).toLocaleString('zh-CN')}</div></div>`).join('') : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">还没有人留言，你来第一个？</div>'}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="comment-nick-${b.id}" class="form-input" style="width:120px;flex-shrink:0" placeholder="昵称" value="匿名旅人">
+        <input id="comment-text-${b.id}" class="form-input" placeholder="写下你的鼓励...">
+        <button class="btn btn-primary btn-sm" onclick="submitComment(${b.id})">发送</button>
+      </div>
+    </div>
+  ` : '';
+  return `
+    <div class="bottle-card">
+      <div class="bottle-mood">${moodMap[b.mood]||'💭'}</div>
+      <div class="bottle-content">${escHtml(b.content)}</div>
+      <div class="bottle-footer">
+        ${tags}
+        <span style="font-size:12px;color:var(--text-muted);margin-left:auto">👁 ${b.view_count} · ${new Date(b.created_at).toLocaleDateString('zh-CN')}</span>
+      </div>
+      ${commentsHtml}
+    </div>
+  `;
+}
+
+async function submitComment(bottleId) {
+  const content = document.getElementById(`comment-text-${bottleId}`).value.trim();
+  const nickname = document.getElementById(`comment-nick-${bottleId}`).value.trim() || '匿名旅人';
+  if (content.length < 2) return toast('评论至少2个字', 'error');
+  try {
+    const comment = await api('POST', `/api/bottles/${bottleId}/comments`, { content, nickname });
+    toast('评论已发送 💌', 'success');
+    document.getElementById(`comment-text-${bottleId}`).value = '';
+    // 刷新评论
+    const commentsDiv = document.getElementById(`comments-${bottleId}`);
+    if (commentsDiv) {
+      commentsDiv.innerHTML += `<div class="comment-item"><div class="comment-nick">${escHtml(comment.nickname)}</div><div class="comment-text">${escHtml(comment.content)}</div><div class="comment-time">刚刚</div></div>`;
+    }
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadMyBottles() {
+  if (!currentUser) {
+    document.getElementById('bottle-mine').innerHTML = `<div class="empty-state"><span class="empty-icon">🔒</span><div class="empty-title">请先登录</div><button class="btn btn-primary" onclick="showLoginModal()" style="margin-top:12px">立即登录</button></div>`;
+    return;
+  }
+  document.getElementById('bottle-mine-list').innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+  try {
+    const bottles = await api('GET', '/api/bottles/mine');
+    if (!bottles.length) {
+      document.getElementById('bottle-mine-list').innerHTML = `<div class="empty-state"><span class="empty-icon">🫙</span><div class="empty-title">还没有漂流瓶</div><div class="empty-desc">投放第一个漂流瓶吧</div></div>`;
+      return;
+    }
+    document.getElementById('bottle-mine-list').innerHTML = bottles.map(b => renderBottle(b, true)).join('<div style="margin:16px 0"></div>');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ===== AI聊天 =====
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleChatKey(e, type) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (type === 'soul') sendSoulMessage();
+    else sendFortuneMessage();
+  }
+}
+
+function appendMsg(containerId, role, content) {
+  const container = document.getElementById(containerId);
+  const avatar = role === 'user' ? '😊' : (containerId === 'soul-messages' ? '🌟' : '🔮');
+  const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+  const div = document.createElement('div');
+  div.className = `msg-row ${role}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(content)}</div>
+      <div class="msg-time">${time}</div>
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendTypingIndicator(containerId) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'msg-row assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar">${containerId==='soul-messages'?'🌟':'🔮'}</div>
+    <div><div class="msg-bubble" style="opacity:0.6">正在思考...</div></div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendSoulMessage() {
+  const input = document.getElementById('soul-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = ''; autoResize(input);
+  document.getElementById('soul-send-btn').disabled = true;
+
+  soulHistory.push({ role: 'user', content: msg });
+  appendMsg('soul-messages', 'user', msg);
+  appendTypingIndicator('soul-messages');
+
+  try {
+    const data = await api('POST', '/api/ai/chat', { messages: soulHistory, mode: 'chat' });
+    document.getElementById('typing-indicator')?.remove();
+    soulHistory.push({ role: 'assistant', content: data.reply });
+    appendMsg('soul-messages', 'assistant', data.reply);
+  } catch (e) {
+    document.getElementById('typing-indicator')?.remove();
+    appendMsg('soul-messages', 'assistant', '抱歉，AI服务暂时不可用。请检查AI配置后重试。');
+    toast(e.message, 'error');
+  }
+  document.getElementById('soul-send-btn').disabled = false;
+  input.focus();
+}
+
+async function sendFortuneMessage() {
+  const input = document.getElementById('fortune-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = ''; autoResize(input);
+  document.getElementById('fortune-send-btn').disabled = true;
+
+  fortuneHistory.push({ role: 'user', content: msg });
+  appendMsg('fortune-messages', 'user', msg);
+  appendTypingIndicator('fortune-messages');
+
+  try {
+    const data = await api('POST', '/api/ai/chat', { messages: fortuneHistory, mode: 'fortune_bazi' });
+    document.getElementById('typing-indicator')?.remove();
+    fortuneHistory.push({ role: 'assistant', content: data.reply });
+    appendMsg('fortune-messages', 'assistant', data.reply);
+  } catch (e) {
+    document.getElementById('typing-indicator')?.remove();
+    appendMsg('fortune-messages', 'assistant', '命理系统暂时无法连接，请检查AI配置。');
+    toast(e.message, 'error');
+  }
+  document.getElementById('fortune-send-btn').disabled = false;
+  input.focus();
+}
+
+function quickSay(type, msg) {
+  if (type === 'soul') {
+    document.getElementById('soul-input').value = msg;
+    sendSoulMessage();
+  }
+}
+
+function clearChat(type) {
+  if (!confirm('确定清空对话记录？')) return;
+  if (type === 'soul') {
+    soulHistory = [];
+    document.getElementById('soul-messages').innerHTML = `
+      <div class="msg-row assistant">
+        <div class="msg-avatar">🌟</div>
+        <div>
+          <div class="msg-bubble">嗨～我是「星愿」✨ 你的AI情绪陪伴师。无论你今天有什么烦恼，我都在这里。今天感觉怎么样？</div>
+          <div class="msg-time">刚刚</div>
+        </div>
+      </div>`;
+  }
+}
+
+// ===== 算命 =====
+function switchFortune(type, btn) {
+  document.querySelectorAll('.fortune-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('fortune-bazi').style.display = type==='bazi' ? 'block' : 'none';
+  document.getElementById('fortune-star').style.display = type==='star' ? 'block' : 'none';
+  document.getElementById('fortune-chat').style.display = type==='chat' ? 'block' : 'none';
+  document.getElementById('fortune-result-area').style.display = 'none';
+}
+
+async function doFortune(mode) {
+  const payload = { mode };
+  if (mode === 'bazi') {
+    payload.birth_date = document.getElementById('f-birth-date').value;
+    payload.birth_time = document.getElementById('f-birth-time').value;
+    payload.birth_gender = document.getElementById('f-gender').value;
+    payload.question = document.getElementById('f-bazi-question').value;
+    if (!payload.birth_date) return toast('请填写出生日期', 'error');
+  } else {
+    payload.star_sign = document.getElementById('f-star-sign').value;
+    payload.birth_date = document.getElementById('f-star-birth').value;
+    payload.question = document.getElementById('f-star-question').value;
+    if (!payload.star_sign) return toast('请选择星座', 'error');
+  }
+
+  document.getElementById('fortune-result-area').style.display = 'block';
+  document.getElementById('fortune-result-text').textContent = '🔮 命理推算中，请稍候...';
+
+  try {
+    const data = await api('POST', '/api/ai/fortune', payload);
+    document.getElementById('fortune-result-text').textContent = data.reply;
+  } catch (e) {
+    document.getElementById('fortune-result-text').textContent = '命理解析失败，请检查AI配置后重试。';
+    toast(e.message, 'error');
+  }
+}
+
+function copyFortune() {
+  const text = document.getElementById('fortune-result-text').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('已复制到剪贴板', 'success'));
+}
+
+// ===== AI配置 =====
+let currentProvider = 'openai';
+
+async function loadAIConfig() {
+  if (!currentUser) {
+    toast('请先登录后设置AI配置', 'info');
+    return;
+  }
+  try {
+    const cfg = await api('GET', '/api/settings/ai');
+    currentProvider = cfg.provider || 'openai';
+    document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+    const pCards = document.querySelectorAll('.provider-card');
+    const providers = ['openai','qwen','zhipu','deepseek','custom'];
+    providers.forEach((p, i) => { if (p === currentProvider && pCards[i]) pCards[i].classList.add('selected'); });
+
+    document.getElementById('cfg-base-url').value = cfg.base_url || '';
+    document.getElementById('cfg-api-key').value = cfg.api_key_masked || '';
+    document.getElementById('cfg-model').value = cfg.model_name || '';
+    document.getElementById('cfg-chat-model').value = cfg.chat_model || '';
+    document.getElementById('cfg-fortune-model').value = cfg.fortune_model || '';
+  } catch (e) {}
+}
+
+function selectProvider(name, el) {
+  currentProvider = name;
+  document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const preset = PROVIDERS[name];
+  if (preset && preset.url) {
+    document.getElementById('cfg-base-url').value = preset.url;
+    document.getElementById('cfg-model').value = preset.model;
+  }
+}
+
+async function saveAIConfig() {
+  if (!currentUser) return showLoginModal();
+  const payload = {
+    provider: currentProvider,
+    base_url: document.getElementById('cfg-base-url').value.trim(),
+    api_key: document.getElementById('cfg-api-key').value.trim(),
+    model_name: document.getElementById('cfg-model').value.trim(),
+    chat_model: document.getElementById('cfg-chat-model').value.trim(),
+    fortune_model: document.getElementById('cfg-fortune-model').value.trim(),
+  };
+  try {
+    await api('PUT', '/api/settings/ai', payload);
+    toast('AI配置已保存 ✅', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function testAIConfig() {
+  if (!currentUser) return showLoginModal();
+  toast('正在测试连接...', 'info');
+  try {
+    const data = await api('POST', '/api/ai/chat', {
+      messages: [{ role: 'user', content: '你好，请回复"连接成功"这4个字' }],
+      mode: 'chat'
+    });
+    toast('✅ 连接成功！AI回复：' + data.reply.slice(0, 30), 'success');
+  } catch (e) { toast('❌ 连接失败：' + e.message, 'error'); }
+}
+
+async function resetAIConfig() {
+  if (!confirm('确定重置为系统默认AI配置吗？')) return;
+  try {
+    await api('DELETE', '/api/settings/ai');
+    toast('已重置为默认配置', 'success');
+    loadAIConfig();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ===== 工具 =====
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== 拉链封存动画 =====
+function playZipperAnimation(callback) {
+  const overlay = document.createElement('div');
+  overlay.className = 'zipper-overlay';
+  overlay.innerHTML = `
+    <div class="zipper-top"><div class="zipper-top-inner"></div></div>
+    <div class="zipper-bottom"><div class="zipper-bottom-inner"></div></div>
+  `;
+  const pull = document.createElement('div');
+  pull.className = 'zipper-pull';
+  pull.textContent = '🔒';
+  document.body.appendChild(overlay);
+  document.body.appendChild(pull);
+
+  // 拉链合拢
+  setTimeout(() => {
+    overlay.style.pointerEvents = 'all';
+  }, 50);
+
+  // 等合拢后触发实际请求
+  setTimeout(async () => {
+    pull.textContent = '✉️';
+    await callback();
+    // 拉链打开
+    overlay.classList.add('zip-open');
+    setTimeout(() => {
+      overlay.remove();
+      pull.remove();
+    }, 750);
+  }, 500);
+}
+
+// ===== 粒子爆炸特效 =====
+function spawnParticles(el, color = '#a78bfa') {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = [color, '#f59e0b', '#34d399', '#60a5fa', '#f472b6'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI * 2 * i) / 18;
+    const dist = 60 + Math.random() * 60;
+    p.style.cssText = `
+      left:${cx}px; top:${cy}px;
+      width:${5+Math.random()*6}px; height:${5+Math.random()*6}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --tx:${Math.cos(angle)*dist}px; --ty:${Math.sin(angle)*dist - 30}px;
+      animation-duration:${0.5+Math.random()*0.5}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+// ===== 胶囊点击彩蛋 =====
+const capsuleEmojis = ['⏳','🕰️','🫙','💌','⭐','🌟','✨','🎇','🎆','🔮'];
+let capsuleIdx = 0;
+function capsuleClick() {
+  capsuleIdx = (capsuleIdx + 1) % capsuleEmojis.length;
+  const el = document.querySelector('.home-capsule');
+  if (!el) return;
+  el.style.transform = 'scale(1.3)';
+  el.textContent = capsuleEmojis[capsuleIdx];
+  spawnParticles(el, '#f59e0b');
+  setTimeout(() => { el.style.transform = ''; }, 300);
+}
+</script>
+</body>
+</html>
